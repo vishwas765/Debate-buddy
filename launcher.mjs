@@ -1,13 +1,13 @@
 // Starts Debate Buddy's local server (or reuses a running copy) and opens the browser.
 // Shared by Windows (START Debate Buddy.cmd), macOS (Start Debate Buddy.command)
 // and Linux (Start Debate Buddy.sh). Paths are built with path.join only.
-import {spawn, spawnSync} from 'node:child_process';
+import {spawn} from 'node:child_process';
 import {mkdirSync, openSync, closeSync, writeFileSync, readFileSync, realpathSync, existsSync} from 'node:fs';
 import {createHash} from 'node:crypto';
 import {fileURLToPath} from 'node:url';
 import path from 'node:path';
 import net from 'node:net';
-import {resolveCodex, resolveChrome, appBundleOf} from './runtime-locator.mjs';
+import {resolveChrome, appBundleOf} from './runtime-locator.mjs';
 
 const APP_ID = 'debate-buddy';
 const root = path.dirname(fileURLToPath(import.meta.url));
@@ -19,7 +19,7 @@ const DEFAULT_PORT = 8350;
 async function statusAt(port) {
   try { const response = await fetch(`http://127.0.0.1:${port}/api/status`, {signal: AbortSignal.timeout(1500)}); return response.ok ? await response.json() : null; } catch { return null; }
 }
-const entry = existsSync(path.join(root, 'server.bundle.mjs')) ? 'server.bundle.mjs' : 'server.mjs';
+const entry = 'server.mjs';
 const build = createHash('sha256').update(readFileSync(path.join(root, entry))).digest('hex').slice(0, 16);
 const ours = status => status?.appId === APP_ID && status.instanceId === instanceId;
 const current = status => ours(status) && status.build === build;
@@ -49,10 +49,6 @@ async function launchBrowser(browser, url) {
   } catch { console.log('Could not open a browser automatically. Open this address yourself: ' + url); }
 }
 
-function findCodex() {
-  try { return resolveCodex(); } catch (error) { return {problem: error.message}; }
-}
-
 async function main() {
   if (Number(process.versions.node.split('.')[0]) < 22) throw new Error('Node.js 22 or newer is required. Use the supplied click-to-start launcher.');
   let previous; try { previous = JSON.parse(readFileSync(path.join(work, 'launcher.json'), 'utf8')).port; } catch {}
@@ -68,30 +64,13 @@ async function main() {
       }
     }
   }
-  const codex = findCodex(), browser = resolveChrome();
-  let codexVersion = '';
-  if (!codex.problem) {
-    const version = spawnSync(codex.command, [...codex.args, '--version'], {encoding: 'utf8', windowsHide: true, timeout: 10000});
-    codexVersion = version.status === 0 ? version.stdout.trim() : '';
-    if (!codexVersion) codex.problem = 'Codex was found but could not run. Open Codex once, then start Debate Buddy again.';
-  }
+  const browser = resolveChrome();
   if (options.has('--diagnose')) {
-    console.log(JSON.stringify({platform: `${process.platform}-${process.arch}`, node: process.version, codex: codex.path || null, codexVersion: codexVersion || null, codexProblem: codex.problem || null, browser: browser || 'default browser fallback', folder: root}, null, 2));
+    console.log(JSON.stringify({platform: `${process.platform}-${process.arch}`, node: process.version, ai: 'Vercel AI Gateway (configure AI_GATEWAY_API_KEY for local use)', browser: browser || 'default browser fallback', folder: root}, null, 2));
     return;
   }
   console.log('Debate Buddy · starting');
-  if (codex.problem) {
-    console.log('\nThe AI engine is not available: ' + codex.problem);
-    console.log('Debate Buddy will still open. Topics, setup, history and the offline research template work; AI practice and live research need Codex.\n');
-  } else {
-    console.log('Codex detected: ' + codex.path);
-    const auth = spawnSync(codex.command, [...codex.args, 'login', 'status'], {encoding: 'utf8', windowsHide: true, timeout: 15000});
-    if (auth.status !== 0 && !options.has('--no-login')) {
-      console.log('Codex needs your sign-in. Complete the normal Codex login below.');
-      const ok = await new Promise(resolve => { const child = spawn(codex.command, [...codex.args, 'login'], {stdio: 'inherit', windowsHide: false}); child.once('error', () => resolve(false)); child.once('exit', code => resolve(code === 0)); });
-      if (!ok) console.log('Codex sign-in was not completed. Debate Buddy will open in offline mode; sign in later and press Reconnect in Settings.');
-    }
-  }
+  console.log('AI uses Vercel AI Gateway. Local AI needs AI_GATEWAY_API_KEY in .env.local.');
   mkdirSync(work, {recursive: true});
   const requested = Number(process.env.PORT || DEFAULT_PORT);
   if (!Number.isInteger(requested) || requested < 1024 || requested > 65525) throw new Error('PORT must be a number between 1024 and 65525.');
@@ -106,7 +85,6 @@ async function main() {
   if (!existing) {
     const stdout = openSync(path.join(work, 'server.log'), 'a'), stderr = openSync(path.join(work, 'server-error.log'), 'a');
     const env = {...process.env, PATH: path.dirname(process.execPath) + path.delimiter + (process.env.PATH || ''), PORT: String(port)};
-    if (codex.path) env.DEBATE_BUDDY_CODEX_PATH = codex.path;
     const child = spawn(process.execPath, [path.join(root, entry)], {cwd: root, env, detached: true, windowsHide: true, stdio: ['ignore', stdout, stderr]});
     await new Promise((resolve, reject) => { child.once('error', reject); child.once('spawn', resolve); });
     closeSync(stdout); closeSync(stderr); child.unref();

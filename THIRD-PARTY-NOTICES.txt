@@ -1,7 +1,8 @@
 THIRD-PARTY NOTICES
 
-The local server (server.bundle.mjs) is built only from Debate Buddy's own source
-files and Node.js built-in modules. No npm packages are bundled.
+The server and Vercel API functions use the npm packages listed in
+package.json. They are installed at build/deployment time and are not bundled
+into the static browser files.
 
 The browser interface includes:
 

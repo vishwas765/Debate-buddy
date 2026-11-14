@@ -48,17 +48,14 @@ using it. That first download needs internet access. No administrator rights
 are needed. Supported: Windows x64/ARM64, macOS (Intel and Apple silicon),
 Linux x64/ARM64.
 
-THE AI ENGINE (CODEX)
-AI practice, hints, reviews and live web research use Codex, the OpenAI
-coding agent, running on your computer and signed in with your own account.
-Install the Codex app or CLI: https://developers.openai.com/codex/cli/
-The launcher finds Codex on PATH and in the usual app locations. If yours is
-elsewhere, set DEBATE_BUDDY_CODEX_PATH to the Codex executable (or the npm
-package's bin/codex.js) before starting.
-If Codex is missing or not signed in, Debate Buddy still works after you
-sign in to your account, in offline mode: topics, setup, history, progress, the offline research template and the
-solo drill all work, and the app says clearly that AI features are
-unavailable. After signing in, press Settings > AI engine > Reconnect.
+THE AI SERVICE (VERCEL AI GATEWAY)
+AI practice, hints, reviews and live research use Vercel AI Gateway. On
+Vercel, the AI SDK uses the deployment's OIDC identity; no AI key is needed
+in the browser or as a Vercel environment variable. For local use, create a
+Vercel AI Gateway API key and put it in .env.local as AI_GATEWAY_API_KEY=...
+You can optionally set AI_GATEWAY_MODEL to a model listed in the Vercel
+dashboard. If AI is unavailable, topics, setup, history and the offline
+research template remain available.
 
 RESEARCH HONESTY
 - Live research only cites pages the engine actually found with web search in
@@ -77,7 +74,7 @@ text for you to edit; audio is never recorded or scored. Set
 DEBATE_BUDDY_BROWSER_PATH to use a specific browser.
 
 USE IT ON YOUR PHONE OR TABLET
-Your phone does not need Codex or anything installed. Debate Buddy keeps
+Your phone does not need anything installed. Debate Buddy keeps
 running on your computer, and the phone opens it in its browser over Wi-Fi.
 1. Start Debate Buddy on your computer as usual.
 2. On the computer, open Settings > Use on your phone > Turn on phone access.
@@ -162,12 +159,13 @@ AI Gateway > API Keys. Then start Debate Buddy again.
 - To use a different model, set AI_GATEWAY_MODEL in .env.local to a name from
   the AI Gateway model list.
 - The AI cannot browse the web here. Check any fact it gives.
-- AI practice, hints, reviews and live research still use Codex (above).
+- AI practice, hints, reviews and live research use Vercel AI Gateway (above).
 
 YOUR DATA
 Sessions, reviews, research workspaces and settings are stored in this
-browser on this computer (IndexedDB and local storage). Only the turns you
-send to the AI engine leave the computer, through your own Codex account.
+browser on this computer (IndexedDB and local storage), and signed-in users
+can sync them through Supabase. AI requests are sent to Vercel AI Gateway
+and the selected model provider.
 Settings > Your data can export everything as JSON or delete all history.
 The server listens only on 127.0.0.1 unless you turn on phone access, which
 opens a second, key-protected port on your local network until you turn it off.
@@ -188,15 +186,25 @@ TROUBLESHOOTING
 - The server keeps running after the launcher window closes; restarting the
   computer stops it. The Stop button stops a reply in progress.
 
+VERCEL DEPLOYMENT
+The project builds the static site into dist/ and runs its /api routes as
+Vercel Functions. Import the GitHub repository in Vercel; the build command
+is "pnpm build" and the output directory is "dist" (also set in vercel.json).
+Add these server-side Environment Variables in Vercel:
+  SUPABASE_URL
+  SUPABASE_PUBLISHABLE_KEY
+They accept the URL and publishable key already used in .env.local. Do not
+add a Supabase secret/service_role key or put any secret under NEXT_PUBLIC_.
+AI_GATEWAY_API_KEY is optional on Vercel because the SDK uses Vercel OIDC;
+AI_GATEWAY_MODEL is also optional. On the Vercel project, enable AI Gateway
+and choose a model/provider. Deployments run from the connected GitHub branch.
+
 SOURCE AND REBUILD
-The launcher runs server.bundle.mjs. After editing the server source, run
-"npm run build" (uses esbuild) or delete server.bundle.mjs so server.mjs runs
-directly. "npm run check" syntax-checks every module. No npm packages are
-needed to run the app: the Supabase packages are built into server.bundle.mjs.
-To change the server code, run "npm install" first.
+Run "pnpm build" to copy the static site to dist/. Run "pnpm check" to
+syntax-check the server and browser modules. The local launcher runs
+server.mjs directly; it uses Vercel AI Gateway instead of a local AI runtime.
 
 TESTED SO FAR
-The app was exercised on Linux (headless Chromium) with a stand-in AI engine
-and in offline mode. The Windows and macOS launchers were reviewed and
-updated but have not yet been run on those systems. Real Codex responses were
-not tested.
+The app was previously exercised on Linux (headless Chromium). The Windows
+and macOS launchers were reviewed but not run on those systems. Live Vercel
+deployment, AI Gateway requests and phone layout still need a live check.

@@ -1,4 +1,4 @@
-import {readdirSync,statSync,realpathSync} from 'node:fs';
+import {statSync} from 'node:fs';
 import {spawnSync} from 'node:child_process';
 import os from 'node:os';
 import path from 'node:path';
@@ -8,43 +8,8 @@ function which(name){
   const result=spawnSync(process.platform==='win32'?'where.exe':'which',[name],{encoding:'utf8',windowsHide:true,timeout:5000});
   return result.status===0?result.stdout.trim().split(/\r?\n/).filter(isFile):[];
 }
-function newestChildren(directory){
-  try{return readdirSync(directory,{withFileTypes:true}).filter(e=>e.isDirectory()).map(e=>path.join(directory,e.name)).sort((a,b)=>statSync(b).mtimeMs-statSync(a).mtimeMs);}catch{return [];}
-}
-// Optional overrides for a custom Codex or browser location.
-const codexOverride=env=>env.DEBATE_BUDDY_CODEX_PATH||'';
+// Optional override for a custom browser location.
 const browserOverride=env=>env.DEBATE_BUDDY_BROWSER_PATH||env.DEBATE_BUDDY_CHROME_PATH||'';
-export function codexCandidates({platform=process.platform,env=process.env,home=os.homedir(),lookup=which}={}){
-  const candidates=[];
-  const override=codexOverride(env);if(override)candidates.push(override);
-  candidates.push(...lookup(platform==='win32'?'codex.exe':'codex'));
-  candidates.push(path.join(home,'.local','bin',platform==='win32'?'codex.exe':'codex'));
-  if(platform==='win32'){
-    const local=env.LOCALAPPDATA||path.join(home,'AppData','Local');
-    for(const directory of newestChildren(path.join(local,'OpenAI','Codex','bin')))candidates.push(path.join(directory,'codex.exe'));
-    for(const parent of [env.APPDATA&&path.join(env.APPDATA,'npm'),env.PROGRAMFILES&&path.join(env.PROGRAMFILES,'nodejs')].filter(Boolean))candidates.push(path.join(parent,'node_modules','@openai','codex','bin','codex.js'));
-    for(const shim of lookup('codex.cmd'))candidates.push(path.join(path.dirname(shim),'node_modules','@openai','codex','bin','codex.js'));
-  }else if(platform==='darwin'){
-    for(const app of ['/Applications/Codex.app',path.join(home,'Applications','Codex.app')]){
-      candidates.push(path.join(app,'Contents/Resources/codex'),path.join(app,'Contents/Resources/bin/codex'));
-    }
-    candidates.push('/opt/homebrew/bin/codex','/usr/local/bin/codex');
-    for(const version of newestChildren(path.join(home,'.nvm','versions','node')))candidates.push(path.join(version,'bin','codex'));
-  }else{
-    candidates.push('/usr/local/bin/codex','/usr/bin/codex','/snap/bin/codex','/opt/Codex/resources/codex','/opt/codex/resources/codex');
-    for(const version of newestChildren(path.join(home,'.nvm','versions','node')))candidates.push(path.join(version,'bin','codex'));
-  }
-  return [...new Set(candidates.filter(Boolean))];
-}
-export function commandForCodex(file){let actual=file;try{actual=realpathSync(file);}catch{}return /\.[cm]?js$/i.test(actual)?{command:process.execPath,args:[actual],path:actual}:{command:file,args:[],path:file};}
-export function resolveCodex(options={}){
-  const override=codexOverride(options.env||process.env);
-  if(override&&!isFile(override))throw new Error('DEBATE_BUDDY_CODEX_PATH points to a missing file. Correct or remove that override.');
-  for(const file of codexCandidates(options)){
-    if(isFile(file)&&!/\.(cmd|bat)$/i.test(file))return commandForCodex(file);
-  }
-  throw new Error('Codex was not found. Install the Codex desktop app or CLI, or set DEBATE_BUDDY_CODEX_PATH to its executable. See https://developers.openai.com/codex/cli/');
-}
 export function chromeCandidates({platform=process.platform,env=process.env,home=os.homedir(),lookup=which}={}){
   const files=[];
   const override=browserOverride(env);if(override)files.push(override);

@@ -1,11 +1,11 @@
 // Small helpers for the app's local settings file.
-// Windows editors often save ".env" as ".env.txt", and some people paste their key
-// into .env.example; both are read as fallbacks so a pasted key is not silently ignored.
+// Windows editors often save ".env" as ".env.txt"; those common local variants
+// are read as fallbacks. The tracked .env.example is never read as a source of secrets.
 import {readFileSync, writeFileSync, renameSync, existsSync} from 'node:fs';
 import {parseEnv} from 'node:util';
 import path from 'node:path';
 
-const CANDIDATES = ['.env.local', '.env', '.env.txt', 'env', 'env.txt', '.env.example'];
+const CANDIDATES = ['.env.local', '.env', '.env.txt', 'env', 'env.txt'];
 
 export function readEnv(root) {
   const merged = {};

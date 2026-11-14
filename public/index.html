@@ -49,7 +49,7 @@ try{const p=JSON.parse(localStorage.getItem('debatebuddy.preferences')||'{}');co
     <h1 class="wordmark" translate="no"><i class="brand-light" aria-hidden="true"></i>DEBATE BUDDY</h1>
     <span class="byline">by Vivaan Kheria</span>
   </div>
-  <div class="top-actions"><span id="systemState" class="system-state" role="status" aria-live="polite">ENGINE // CHECKING</span></div>
+  <div class="top-actions"><span id="systemState" class="system-state" role="status" aria-live="polite">AI GATEWAY // CHECKING</span></div>
 </header>
 <nav class="tabs" aria-label="Main">
   <button class="tab" type="button" data-view="debate" aria-current="page"><svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h11a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H9l-4 3v-3H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/><path d="M19 9h1a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-1v3l-4-3h-3"/></svg><span class="tab-label">Debate</span></button>
@@ -223,7 +223,7 @@ try{const p=JSON.parse(localStorage.getItem('debatebuddy.preferences')||'{}');co
           <div><label class="field-label" for="researchCommittee">Committee</label><input id="researchCommittee" class="text-input" list="committeeList" maxlength="120" placeholder="e.g. UN General Assembly"></div>
           <div><label class="field-label" for="researchCountry">Your country</label><input id="researchCountry" class="text-input" list="countryList" maxlength="80" placeholder="Start typing a country"></div>
         </div>
-        <label class="check"><input type="checkbox" id="researchWeb" checked> Live web research with cited sources (needs the AI engine and internet)</label>
+        <label class="check"><input type="checkbox" id="researchWeb" checked> Live web research with cited sources (needs Vercel AI Gateway and internet)</label>
         <div class="form-actions"><button type="submit" id="buildResearch">Build research workspace</button><button type="button" id="offlineResearch">Offline template</button></div>
         <p class="field-note" id="researchNote">Facts are labelled as Verified, Sourced, Analysis or Background so you can see what was checked.</p>
       </form>
@@ -354,7 +354,7 @@ try{const p=JSON.parse(localStorage.getItem('debatebuddy.preferences')||'{}');co
     <!-- SETTINGS -->
     <section class="panel" id="settingsPanel" aria-labelledby="settingsTitle" hidden>
       <div class="panel-head"><h2 id="settingsTitle">Settings</h2></div>
-      <div class="setting"><div><h3>AI engine</h3><p id="settingsStatus">Checking…</p><p class="field-note">Debate Buddy uses the Codex app on this computer, signed in with your own account. Practice and live research need it. Topics, setup, history, progress, the offline research template and the solo drill work without it.</p></div><button id="reconnectEngine" type="button">Reconnect</button></div>
+      <div class="setting"><div><h3>AI service</h3><p id="settingsStatus">Checking…</p><p class="field-note">Debate Buddy sends debate practice and research requests through Vercel AI Gateway. The deployment uses Vercel's project identity; local runs need AI_GATEWAY_API_KEY in .env.local. Keep keys in server environment variables only.</p></div><button id="reconnectEngine" type="button">Check connection</button></div>
       <div class="setting">
         <div><h3>Appearance</h3><p>Three interfaces: Core, the original black and red; Glass, translucent and calm; and Marigold, warm and bold. Light works better on bright projectors.</p></div>
         <div class="setting-actions">
@@ -382,7 +382,7 @@ try{const p=JSON.parse(localStorage.getItem('debatebuddy.preferences')||'{}');co
       <div class="setting phone-setting" id="phoneSetting">
         <div class="phone-body">
           <h3>Use on your phone</h3>
-          <p id="phoneIntro">Open Debate Buddy on your phone or tablet. Your phone does not need Codex: this computer does the AI work, so keep it on, awake and on the same Wi-Fi as your phone.</p>
+          <p id="phoneIntro">Open Debate Buddy on your phone or tablet. Keep this computer on, awake and on the same Wi-Fi as your phone.</p>
           <div class="phone-panel" id="phonePanel" hidden>
             <div class="phone-qr" id="phoneQr" role="img" aria-label="QR code that opens Debate Buddy on your phone"></div>
             <div class="phone-steps">

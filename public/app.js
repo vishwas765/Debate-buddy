@@ -151,18 +151,18 @@ function updateBrief() {
 }
 
 // ---------- Engine status ----------
-const ENGINE_TEXT = {ready: 'Ready. Codex is signed in.', 'signed-out': 'Codex is installed but not signed in. Sign in to Codex, then press Reconnect.', missing: 'Codex was not found on this computer, so AI practice and live research are unavailable. Install the Codex app or CLI, sign in, then press Reconnect.', unreachable: 'The local Debate Buddy server is not responding. Start it again with the launcher.', checking: 'Checking…'};
+const ENGINE_TEXT = {ready: 'Vercel AI Gateway is ready.', missing: 'AI is not configured. On Vercel, connect AI Gateway in the Vercel dashboard. For local use, add AI_GATEWAY_API_KEY to .env.local.', unreachable: 'Debate Buddy could not reach its server. Reload the page or start it again with the launcher.', checking: 'Checking…'};
 async function status() {
   try {
     const response = await fetch('/api/status', {cache: 'no-store'}); const data = await response.json();
-    engine = data.engine || (data.connected ? 'ready' : 'signed-out');
+    engine = data.engine || (data.connected ? 'ready' : 'missing');
   } catch { engine = 'unreachable'; }
   $('#settingsStatus').textContent = ENGINE_TEXT[engine];
   paintSystem(); renderSetupNote();
 }
 function paintSystem() {
   const activity = document.body.dataset.activity;
-  $('#systemState').textContent = activity !== 'idle' ? 'AI // ' + activity.toUpperCase() : 'ENGINE // ' + ({ready: 'READY', 'signed-out': 'SIGN IN', missing: 'OFFLINE', unreachable: 'OFFLINE', checking: 'CHECKING'}[engine]);
+  $('#systemState').textContent = activity !== 'idle' ? 'AI // ' + activity.toUpperCase() : 'AI GATEWAY // ' + ({ready: 'READY', missing: 'SETUP', unreachable: 'OFFLINE', checking: 'CHECKING'}[engine]);
   $('#systemState').dataset.engine = engine;
 }
 const setActivity = a => { document.body.dataset.activity = a; paintSystem(); if (!narrator.speaking) face?.setState(a === 'idle' ? 'idle' : a === 'searching' ? 'searching' : a === 'writing' ? 'writing' : 'thinking'); };
@@ -1149,8 +1149,9 @@ async function phoneRequest(body) {
   const data = await response.json(); if (!response.ok) throw new Error(data.error || 'Phone access could not change.'); return data;
 }
 if (REMOTE) {
-  $('#phoneIntro').textContent = 'You are using Debate Buddy on this device through your computer. Keep the computer on, awake and on the same Wi-Fi. Your sessions here are saved in this device’s browser. Voice dictation is not available over the Wi-Fi link; read-aloud still works.';
-  $('#phoneToggle').hidden = true; $('#saveElevenLabsKey').closest('.inline-field').hidden = true; $('#reconnectEngine').hidden = false;
+  $('#phoneSetting').hidden = true;
+  $('#saveElevenLabsKey').closest('.inline-field').hidden = true;
+  $('#reconnectEngine').hidden = true;
 } else {
   phoneRequest().then(paintPhone).catch(() => {});
   $('#phoneToggle').onclick = async () => {
@@ -1208,7 +1209,7 @@ function paintAccount() {
   if (a.signedIn) text = a.problem || a.blocked || (a.syncing ? 'Syncing…' : a.lastError ? 'Sync problem: ' + a.lastError + ' Your work is still saved in this browser.' : a.lastSync ? 'All synced at ' + new Date(a.lastSync).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) + '.' : '');
   note.textContent = text;
   $('#sharedTopicForm').hidden = !(a.signedIn && a.role === 'teacher' && a.schema !== false);
-  $('#dataSummary').textContent = a.signedIn && a.schema !== false && !a.blocked ? 'Sessions, research and settings are saved in this browser and synced to your account in your Supabase project. Turns sent to the AI engine also leave this computer.' : 'Sessions, research and settings are saved in this browser on this computer. Nothing is uploaded except the turns sent to the AI engine.';
+  $('#dataSummary').textContent = a.signedIn && a.schema !== false && !a.blocked ? 'Sessions, research and settings are saved in this browser and synced to your account in your Supabase project. Turns sent to Vercel AI Gateway are processed by the selected AI provider.' : 'Sessions, research and settings are saved in this browser on this computer. Only your AI requests are sent to Vercel AI Gateway and the selected AI provider.';
 }
 function setSharedTopics(list) {
   const before = sharedTopics.map(t => t.id).join();

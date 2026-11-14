@@ -1,8 +1,9 @@
 // "Ask AI": one question in, one answer out, using the Vercel AI SDK through the
 // Vercel AI Gateway. This runs on the server only. The gateway key is read from the
 // local .env.local file and is never sent to the browser.
-import {generateText, createGateway} from 'ai';
+import {generateText, streamText, createGateway, gateway, stepCountIs} from 'ai';
 import {readEnv} from './env-file.mjs';
+import {appInstructions, buildPrompt} from './debate-coach.mjs';
 
 // A small, low-cost model. Change it by setting AI_GATEWAY_MODEL in .env.local
 // (the Vercel AI Gateway dashboard lists the model names you can use).
@@ -12,6 +13,16 @@ export function readAiConfig(root) {
   const local = readEnv(root);
   const pick = key => String(local[key] || process.env[key] || '').trim().replace(/^["']|["']$/g, '');
   return {apiKey: pick('AI_GATEWAY_API_KEY').replace(/^bearer\s+/i, '').replace(/\s+/g, ''), model: pick('AI_GATEWAY_MODEL') || DEFAULT_MODEL, baseURL: pick('AI_GATEWAY_BASE_URL')};
+}
+
+function aiReady(config) {
+  return !!(config.apiKey || process.env.VERCEL_OIDC_TOKEN || process.env.VERCEL === '1');
+}
+
+function aiModel(config) {
+  return config.apiKey
+    ? createGateway({apiKey: config.apiKey, ...(config.baseURL ? {baseURL: config.baseURL} : {})})(config.model)
+    : gateway(config.model);
 }
 
 // What the AI is told before every question. It keeps answers on debate and honest about sources.
@@ -33,10 +44,9 @@ export function allowQuestion(userId, now = Date.now()) {
 const fail = (status, message) => Object.assign(new Error(message), {status});
 export async function askAi(root, question, signal) {
   const config = readAiConfig(root);
-  if (!config.apiKey) throw fail(503, 'The AI is not set up on this computer yet. Add AI_GATEWAY_API_KEY to the .env.local file (see START HERE.txt).');
-  const gateway = createGateway({apiKey: config.apiKey, ...(config.baseURL ? {baseURL: config.baseURL} : {})});
+  if (!aiReady(config)) throw fail(503, 'The AI service is not configured. Add AI_GATEWAY_API_KEY to the server environment (see START HERE.txt).');
   try {
-    const {text} = await generateText({model: gateway(config.model), instructions: INSTRUCTIONS, prompt: question, maxOutputTokens: 700, maxRetries: 1, timeout: 60000, abortSignal: signal});
+    const {text} = await generateText({model: aiModel(config), instructions: INSTRUCTIONS, prompt: question, maxOutputTokens: 700, maxRetries: 1, timeout: 60000, abortSignal: signal});
     if (!text?.trim()) throw fail(502, 'The AI returned an empty answer. Try asking again.');
     return {answer: text.trim(), model: config.model};
   } catch (error) {
@@ -56,4 +66,23 @@ export async function askAi(root, question, signal) {
     if (code >= 400 && code < 500 && said) throw fail(502, 'The AI Gateway refused the request. It says: "' + said + '"');
     throw fail(502, 'Could not reach the AI. Check the internet connection and try again.');
   }
+}
+
+// Debate turns run through Vercel AI Gateway. On Vercel the SDK can use the
+// deployment's OIDC identity; local runs use AI_GATEWAY_API_KEY from .env.local.
+export function streamDebate(root, request, signal) {
+  const config = readAiConfig(root);
+  if (!aiReady(config)) throw fail(503, 'The AI service is not configured. Add AI_GATEWAY_API_KEY to the server environment.');
+  const researching = request.web === true && ['research', 'research-ask'].includes(request.kind);
+  const history = request.history.map(item => ({role: item.role, content: item.text}));
+  history.push({role: 'user', content: buildPrompt(request)});
+  return streamText({
+    model: aiModel(config),
+    system: appInstructions,
+    messages: history,
+    ...(researching ? {tools: {parallel_search: gateway.tools.parallelSearch({mode: 'agentic', maxResults: 6})}, stopWhen: stepCountIs(5)} : {}),
+    maxOutputTokens: request.kind === 'research' ? 6000 : request.kind === 'review' ? 2400 : 1800,
+    maxRetries: 1,
+    abortSignal: signal
+  });
 }

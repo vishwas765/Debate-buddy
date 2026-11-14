@@ -15,6 +15,7 @@ export function parseCookies(header = '') {
 
 function serializeCookie({name, value, options = {}}) {
   const parts = [`${name}=${encodeURIComponent(value)}`, 'Path=/', 'HttpOnly', 'SameSite=Lax'];
+  if (process.env.VERCEL === '1') parts.push('Secure');
   if (options.maxAge != null) parts.push('Max-Age=' + Math.max(0, Math.floor(options.maxAge)));
   return parts.join('; ');
 }

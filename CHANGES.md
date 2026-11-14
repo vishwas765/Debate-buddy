@@ -1,6 +1,6 @@
 # Debate Buddy (adapted from YOGI)
 
-Debate Buddy keeps YOGI's local server, Codex engine connection, launchers, storage approach and the Core, Glass and Marigold interfaces, and replaces the general assistant with a debate-only product.
+Debate Buddy keeps the local server, launchers, storage approach and the Core, Glass and Marigold interfaces, and replaces the general assistant with a debate-only product. The original local Codex integration described in earlier notes has since been removed; AI now uses Vercel AI Gateway.
 
 ## What changed
 - **Identity:** renamed throughout (pages, launchers, docs, config, storage keys, engine instructions). The face, wake word, plugins, skills, chess, image tools, email, uploads and general chat were removed.
@@ -9,11 +9,11 @@ Debate Buddy keeps YOGI's local server, Codex engine connection, launchers, stor
 - **Difficulty:** Beginner, Intermediate and Advanced change vocabulary, argument depth, rebuttal strength, pace, coaching and, for MUN, procedural realism. The setup screen lists what changes.
 - **Practice controls:** start, pause, continue, hints (MUN: point, response or motion), let others speak, move committee, end and review. Sessions survive refreshes.
 - **Research:** a sectioned workspace for any format with evidence labels (Verified, Sourced, Analysis, Background), a search counter, a source list, a research plan and a printable revision sheet. Without the engine, an offline template with search queries and search links is built instead and labelled as such.
-- **Offline mode:** the launcher and server start without Codex. A solo drill with self-assessment works offline.
-- **Cross-platform:** macOS opens the browser with `open -a`; Node and Codex are found in Homebrew, nvm and Volta locations; Edge is a fallback browser; time zone comes from the browser instead of a fixed Indian time zone; Windows scripts keep CRLF line endings.
+- **Offline mode:** the launcher and server start without an AI connection. A solo drill with self-assessment works offline.
+- **Cross-platform:** macOS opens the browser with `open -a`; Node is found in Homebrew, nvm and Volta locations; Edge is a fallback browser; time zone comes from the browser instead of a fixed Indian time zone; Windows scripts keep CRLF line endings.
 
 ## Main files
-`debate-coach.mjs` (formats, difficulty, prompts), `server.mjs`, `codex-bridge.mjs`, `launcher.mjs`, `runtime-locator.mjs`, `public/index.html`, `public/app.js`, `public/debate.css`, `public/topics.js`, `public/research-offline.js`, `public/voice.js`.
+`debate-coach.mjs` (formats, difficulty, prompts), `server.mjs`, `ai.mjs`, `launcher.mjs`, `runtime-locator.mjs`, `public/index.html`, `public/app.js`, `public/debate.css`, `public/topics.js`, `public/research-offline.js`, `public/voice.js`.
 
 ## Second round
 - **Face restored** (dot matrix, orb or illustrated, per interface) at the top of the brief. It speaks each AI turn aloud and becomes the speaker's country flag for MUN delegates. Each speaker has their own browser voice and pitch. Press the face or a bubble's play button to replay.
@@ -24,7 +24,7 @@ Debate Buddy keeps YOGI's local server, Codex engine connection, launchers, stor
 - **History redesigned:** cards grouped by day with a plain description (what it is, how far it got, score) and a clear Continue / Open / See review button, plus search.
 
 ## Phone access
-- **Settings > Use on your phone** opens a second, key-protected listener on the local network and shows a QR code. The phone needs only a browser; the computer runs Codex. The key is stored in `work/phone.json`, kept in an HttpOnly cookie on the phone, and can be replaced with "New link". Phone access survives restarts until turned off.
+- **Settings > Use on your phone** opens a second, key-protected listener on the local network and shows a QR code. The phone needs only a browser; the key is stored in `work/phone.json`, kept in an HttpOnly cookie on the phone, and can be replaced with "New link". Phone access survives restarts until turned off.
 - Phones cannot change computer settings (phone access, ElevenLabs key).
 - Works over plain http: IDs no longer need `crypto.randomUUID`, dictation hides itself where the browser blocks the microphone, and the app can be added to the home screen (web manifest and icons).
 - Phone layout tightened so the conversation gets most of the screen.
