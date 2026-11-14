@@ -1,0 +1,18 @@
+# Secrets: real keys live only in a local .env file and must never be committed.
+.env
+.env.local
+.env.*
+!.env.example
+env
+env.txt
+
+# Created when the app runs (logs, phone key, AI workspace, downloaded Node runtime)
+work/
+workspace/
+.runtime/
+
+# Tooling and operating system files
+node_modules/
+*.log
+.DS_Store
+Thumbs.db

@@ -1,0 +1,8 @@
+# Keep launcher line endings correct on every computer, whatever Git is set to.
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+*.sh text eol=lf
+*.command text eol=lf
+*.mjs text eol=lf
+*.woff2 binary
+*.png binary

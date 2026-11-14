@@ -1,0 +1,478 @@
+<!doctype html>
+<html lang="en" data-theme="dark" data-ui="core">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Debate Buddy">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<meta name="description" content="Debate Buddy: research, practise and review debates, group discussions and Model United Nations.">
+<title>Debate Buddy</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="/fonts/doto-900.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/grotesk-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/ui-glass.css">
+<link rel="stylesheet" href="/ui-marigold.css">
+<link rel="stylesheet" href="/debate.css">
+<script>
+// Apply the saved look before the first paint, so there is no flash of the wrong interface.
+try{const p=JSON.parse(localStorage.getItem('debatebuddy.preferences')||'{}');const ui=['core','glass','marigold'].includes(p.ui)?p.ui:'core';document.documentElement.dataset.ui=ui;document.documentElement.dataset.theme=p.theme==='light'?'light':'dark';if(p.reducedMotion)document.documentElement.classList.add('reduce-motion');}catch{}
+</script>
+</head>
+<body data-view="debate" data-activity="idle" data-face="dots">
+<div class="ambient" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+<div id="saveWarning" class="save-warning" role="alert" hidden><span id="saveWarningText">Changes are not saved.</span><button id="retrySave" type="button">Retry saving</button><button type="button" id="saveWarningExport">Export backup</button></div>
+<a class="skip-link" href="#main">Skip to content</a>
+<div class="auth-gate" id="authGate" role="dialog" aria-modal="true" aria-labelledby="gateTitle">
+  <div class="auth-card">
+    <p class="wordmark" translate="no"><i class="brand-light" aria-hidden="true"></i>DEBATE BUDDY</p>
+    <h2 id="gateTitle">Sign in to start</h2>
+    <p class="gate-text" id="gateText" role="status">Checking your sign-in…</p>
+    <form class="account-form" id="accountForm" hidden>
+      <label class="field-label" for="accountEmail">Email</label>
+      <input id="accountEmail" class="text-input" type="email" autocomplete="username" maxlength="254" required>
+      <label class="field-label" for="accountPassword">Password (at least 6 characters)</label>
+      <input id="accountPassword" class="text-input" type="password" autocomplete="current-password" minlength="6" maxlength="200" required>
+      <div class="form-actions"><button type="submit" id="signIn">Sign in</button><button type="button" id="signUp">Create account</button></div>
+    </form>
+    <p class="field-note" id="gateNote" role="status"></p>
+    <button type="button" class="ghost" id="gateRetry" hidden>Try again</button>
+  </div>
+</div>
+
+<header class="topbar">
+  <div class="brand">
+    <h1 class="wordmark" translate="no"><i class="brand-light" aria-hidden="true"></i>DEBATE BUDDY</h1>
+    <span class="byline">by Vivaan Kheria</span>
+  </div>
+  <div class="top-actions"><span id="systemState" class="system-state" role="status" aria-live="polite">ENGINE // CHECKING</span></div>
+</header>
+<nav class="tabs" aria-label="Main">
+  <button class="tab" type="button" data-view="debate" aria-current="page"><svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h11a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H9l-4 3v-3H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/><path d="M19 9h1a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-1v3l-4-3h-3"/></svg><span class="tab-label">Debate</span></button>
+  <button class="tab" type="button" data-view="research"><svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg><span class="tab-label">Research</span></button>
+  <button class="tab" type="button" data-view="practice"><svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><span class="tab-label">Practice </span><span class="count live-dot" id="practiceLive" hidden><span aria-hidden="true">●</span><span class="sr-only"> (session in progress)</span></span></button>
+  <button class="tab" type="button" data-view="ask"><svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-6l-5 4v-4H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/><path d="M9.6 8.6a2.5 2.5 0 1 1 3.3 2.4c-.6.3-.9.7-.9 1.4M12 14.6v.2"/></svg><span class="tab-label">Ask AI</span></button>
+  <button class="tab" type="button" data-view="topics"><svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg><span class="tab-label">Topics</span></button>
+  <button class="tab" type="button" data-view="progress"><svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><span class="tab-label">Progress</span></button>
+  <button class="tab" type="button" data-view="history"><svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span class="tab-label">History </span><span class="count" id="historyCount">0</span></button>
+  <button class="tab" type="button" data-view="settings"><svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg><span class="tab-label">Settings</span></button>
+</nav>
+
+<div class="shell">
+  <!-- The brief: what is selected right now, visible while preparing and practising. -->
+  <section class="stage brief" id="brief" aria-label="Current selection">
+    <div class="narrator" id="narrator">
+    <div class="face-wrap">
+        <button class="face-button" id="faceButton" aria-label="Debate Buddy face. Press to replay the last turn aloud." title="Replay the last turn aloud">
+          <canvas id="dotFace" class="dot-face" aria-hidden="true"></canvas>
+          <canvas id="orbFace" class="orb-face" aria-hidden="true"></canvas>
+          <svg id="face" class="face" viewBox="0 0 400 420" role="img" aria-labelledby="faceTitle">
+            <title id="faceTitle">Debate Buddy face</title>
+            <defs>
+              <clipPath id="mouthClip"><path id="mouthClipPath" d=""/></clipPath>
+            </defs>
+            <!-- Sound rings: listening ripples and voice warm-up bars sit behind the head. -->
+            <g id="rings" class="rings" aria-hidden="true">
+              <circle class="ring" cx="200" cy="228" r="182"/>
+              <circle class="ring" cx="200" cy="228" r="182"/>
+              <circle class="ring" cx="200" cy="228" r="182"/>
+            </g>
+            <g id="tuner" class="tuner" aria-hidden="true"></g>
+            <g id="thoughts" class="thoughts" aria-hidden="true">
+              <circle cx="336" cy="84" r="9"/>
+              <circle cx="358" cy="52" r="13"/>
+              <circle cx="378" cy="14" r="17"/>
+            </g>
+            <g id="head" class="head">
+              <!-- Bob haircut behind the face -->
+              <path class="hair" d="M200 58 C322 58 376 136 372 236 C370 296 362 340 346 372 C330 384 304 382 292 368 L108 368 C96 382 70 384 54 372 C38 340 30 296 28 236 C24 136 78 58 200 58 Z"/>
+              <path id="headShape" class="head-shape" d="M200 96 C290 96 332 150 332 232 C332 318 286 370 200 370 C114 370 68 318 68 232 C68 150 110 96 200 96 Z"/>
+              <!-- Side-swept fringe -->
+              <path class="hair" d="M62 236 C52 138 112 72 204 72 C292 72 348 128 340 214 C330 170 312 146 286 134 C270 150 244 158 212 155 C186 151 166 141 150 126 C116 144 82 184 62 230 Z"/>
+              <g class="clip"><rect x="262" y="118" width="40" height="15" rx="7.5" transform="rotate(-24 282 125)" class="clip-band"/><circle id="antennaDot" cx="282" cy="125" r="8"/></g>
+              <ellipse id="cheekL" class="cheek" cx="118" cy="268" rx="26" ry="15"/>
+              <ellipse id="cheekR" class="cheek" cx="282" cy="268" rx="26" ry="15"/>
+              <g id="browL" class="brow"><path d="M124 176 Q148 164 172 172" fill="none" stroke-width="8" stroke-linecap="round"/></g>
+              <g id="browR" class="brow"><path d="M228 172 Q252 164 276 176" fill="none" stroke-width="8" stroke-linecap="round"/></g>
+              <g id="eyeL" class="eye">
+                <ellipse class="eye-ball" cx="148" cy="214" rx="21" ry="29"/>
+                <circle class="eye-glint" cx="156" cy="202" r="7"/>
+                <circle class="eye-glint small" cx="141" cy="226" r="3"/>
+                <path class="lash" d="M129 198 L118 189 M133 192 L126 181" />
+              </g>
+              <g id="eyeR" class="eye">
+                <ellipse class="eye-ball" cx="252" cy="214" rx="21" ry="29"/>
+                <circle class="eye-glint" cx="260" cy="202" r="7"/>
+                <circle class="eye-glint small" cx="245" cy="226" r="3"/>
+                <path class="lash" d="M271 198 L282 189 M267 192 L274 181" />
+              </g>
+              <g id="fxStars" class="fx fx-stars" opacity="0"><path d="M148.0 184.0 L155.1 204.3 L176.5 204.7 L159.4 217.7 L165.6 238.3 L148.0 226.0 L130.4 238.3 L136.6 217.7 L119.5 204.7 L140.9 204.3 Z"/><path d="M252.0 184.0 L259.1 204.3 L280.5 204.7 L263.4 217.7 L269.6 238.3 L252.0 226.0 L234.4 238.3 L240.6 217.7 L223.5 204.7 L244.9 204.3 Z"/></g>
+              <g id="fxX" class="fx fx-x" opacity="0"><path d="M131 197 L165 231 M165 197 L131 231 M235 197 L269 231 M269 197 L235 231"/></g>
+              <g id="fxShades" class="fx fx-shades" opacity="0"><path class="bridge" d="M176 206 Q200 196 224 206"/><rect x="112" y="190" width="72" height="48" rx="22"/><rect x="216" y="190" width="72" height="48" rx="22"/><path class="glint" d="M126 204 L142 197 M230 204 L246 197"/></g>
+              <path id="fxTear" class="fx fx-tear" opacity="0" d="M150 238 Q164 262 150 272 Q136 262 150 238 Z"/>
+              <g id="mouth" class="mouth">
+                <path id="mouthShape" class="mouth-shape" d=""/>
+                <g clip-path="url(#mouthClip)">
+                  <rect id="teeth" class="teeth" x="150" y="0" width="100" height="14" rx="4"/>
+                  <ellipse id="tongue" class="tongue" cx="200" cy="330" rx="26" ry="16"/>
+                </g>
+              </g>
+            </g>
+          </svg>
+        </button>
+        <div class="flag-face" id="flagFace" aria-hidden="true" hidden>
+          <img id="flagImg" alt="">
+          <svg viewBox="0 0 100 100" class="flag-features"><g class="flag-eyes"><ellipse cx="36" cy="44" rx="6.5" ry="8.5"/><ellipse cx="64" cy="44" rx="6.5" ry="8.5"/><circle class="glint" cx="38.5" cy="40.5" r="2.2"/><circle class="glint" cx="66.5" cy="40.5" r="2.2"/></g><path id="flagMouth" class="flag-mouth" d="M38 64 Q50 70 62 64 Q50 72 38 64Z"/></svg>
+        </div>
+      </div>
+      <div class="narrator-copy">
+        <p class="speaker-now" id="speakerNow" aria-live="polite">Debate Buddy</p>
+        <p class="speaker-sub" id="speakerSub">Ready when you are</p>
+        <button type="button" class="voice-toggle" id="voiceToggle" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path class="waves" d="M16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11" fill="none" stroke-width="2" stroke-linecap="round"/></svg><span id="voiceToggleLabel">Voice off</span></button>
+      </div>
+    </div>
+    <div class="brief-item brief-format"><span class="brief-k">Format</span><span class="brief-v" id="briefFormat">None</span></div>
+    <div class="brief-item brief-topic"><span class="brief-k">Topic</span><span class="brief-v" id="briefTopic">No topic chosen yet</span></div>
+    <div class="brief-item" id="briefSideItem" hidden><span class="brief-k" id="briefSideLabel">Side</span><span class="brief-v" id="briefSide">Not chosen</span></div>
+    <div class="brief-item" id="briefLevelItem" hidden><span class="brief-k">Level</span><span class="brief-v" id="briefLevel">Intermediate</span></div>
+    <div class="brief-item" id="briefRoundItem" hidden><span class="brief-k" id="briefRoundLabel">Round</span><span class="brief-v" id="briefRound">1 of 4</span></div>
+    <div class="brief-timer" id="timerBox" hidden><span class="brief-k">Your time</span><span class="timer" id="timer" role="timer" aria-label="Your speaking time">1:30</span></div>
+  </section>
+
+  <main class="work" id="main" tabindex="-1">
+    <!-- DEBATE: choose a topic and a format -->
+    <section class="panel debate-panel" id="debatePanel" aria-labelledby="debateTitle">
+      <div class="panel-head"><h2 id="debateTitle">What do you want to debate?</h2><button class="ghost" type="button" id="browseTopics">All topics</button></div>
+      <form class="topic-entry" id="topicForm">
+        <label class="sr-only" for="topicInput">Your topic or motion</label>
+        <input id="topicInput" type="text" maxlength="300" placeholder="Type a motion, e.g. This house would ban homework" autocomplete="off">
+        <button type="submit" class="primary-btn">Use this topic</button>
+      </form>
+      <div class="topic-tools">
+        <div class="filter-chips" role="group" aria-label="Topic category" id="categoryChips"></div>
+        <div class="topic-actions"><button type="button" class="ghost" id="refreshTopics">Refresh suggestions</button><button type="button" class="ghost" id="surpriseMe">Surprise me</button></div>
+      </div>
+      <div class="suggestions topic-grid" id="topicGrid" aria-label="Suggested topics"></div>
+
+      <fieldset class="format-picker" id="formatPicker">
+        <legend>Choose a format</legend>
+        <label class="format-card"><input type="radio" name="format" value="for-against"><span class="format-name">For / Against</span><span class="format-desc">You pick a side. Debate Buddy argues the other one, round by round.</span></label>
+        <label class="format-card"><input type="radio" name="format" value="group"><span class="format-name">Group Discussion</span><span class="format-desc">Join a moderated discussion with simulated participants who hold different views.</span></label>
+        <label class="format-card"><input type="radio" name="format" value="mun"><span class="format-name">Model United Nations</span><span class="format-desc">Represent a country in committee, with delegates, procedure and resolutions.</span></label>
+      </fieldset>
+
+      <fieldset class="difficulty home-difficulty" aria-describedby="homeDifficultyNote">
+        <legend>Choose a difficulty</legend>
+        <div class="difficulty-options">
+          <label><input type="radio" name="difficulty" value="beginner"><span>Beginner</span></label>
+          <label><input type="radio" name="difficulty" value="intermediate" checked><span>Intermediate</span></label>
+          <label><input type="radio" name="difficulty" value="advanced"><span>Advanced</span></label>
+        </div>
+        <p class="field-note" id="homeDifficultyNote" aria-live="polite"></p>
+      </fieldset>
+
+      <div class="ready-bar" id="readyBar">
+        <p id="readyText" aria-live="polite">Pick a topic and a format to begin.</p>
+        <div class="form-actions"><button type="button" id="goPractice">Set up practice</button><button type="button" id="goResearch">Prepare research</button></div>
+      </div>
+    </section>
+
+    <!-- TOPICS: browse everything -->
+    <section class="panel" id="topicsPanel" aria-labelledby="topicsTitle" hidden>
+      <div class="panel-head"><h2 id="topicsTitle">Topics</h2></div>
+      <label class="sr-only" for="topicSearch">Search topics</label>
+      <input id="topicSearch" class="search-input" type="search" placeholder="Search topics" autocomplete="off">
+      <form class="topic-entry" id="customTopicForm"><label class="sr-only" for="customTopic">Custom topic</label><input id="customTopic" maxlength="300" placeholder="Or enter your own topic" autocomplete="off"><button type="submit" class="primary-btn">Debate this</button></form>
+      <form class="setup-card shared-topic-form" id="sharedTopicForm" hidden>
+        <h3>Add a topic for your students</h3>
+        <label class="field-label" for="sharedTopicText">Topic or motion</label>
+        <input id="sharedTopicText" class="text-input" maxlength="300" minlength="3" required autocomplete="off">
+        <div class="setup-grid">
+          <div><label class="field-label" for="sharedTopicCategory">Category</label><select id="sharedTopicCategory" class="text-input"></select></div>
+          <fieldset class="shared-formats"><legend class="field-label">Works for</legend>
+            <label class="check"><input type="checkbox" name="sharedFormat" value="for-against" checked> For / Against</label>
+            <label class="check"><input type="checkbox" name="sharedFormat" value="group" checked> Group Discussion</label>
+            <label class="check"><input type="checkbox" name="sharedFormat" value="mun"> MUN</label>
+          </fieldset>
+        </div>
+        <div class="form-actions"><button type="submit">Share with students</button></div>
+        <p class="field-note">Everyone who signs in to this Supabase project sees shared topics. Only teacher accounts can add or remove them.</p>
+      </form>
+      <div id="topicLibrary" class="topic-library"></div>
+    </section>
+
+    <!-- RESEARCH -->
+    <section class="panel research-panel" id="researchPanel" aria-labelledby="researchTitle" hidden>
+      <div class="panel-head"><h2 id="researchTitle">Research</h2><button class="ghost" type="button" id="newResearch">New workspace</button></div>
+      <form class="setup-card" id="researchForm">
+        <label class="field-label" for="researchTopic">Topic</label>
+        <input id="researchTopic" class="text-input" maxlength="300" required autocomplete="off">
+        <span class="field-label" id="researchFormatLabel">Prepare for</span>
+        <div class="segmented" role="radiogroup" aria-labelledby="researchFormatLabel" id="researchFormat">
+          <button type="button" role="radio" data-format="for-against" aria-checked="true">For / Against</button><button type="button" role="radio" data-format="group" aria-checked="false">Group Discussion</button><button type="button" role="radio" data-format="mun" aria-checked="false">MUN</button>
+        </div>
+        <div class="setup-row" data-only="for-against">
+          <span class="field-label" id="researchSideLabel">Your side (optional)</span>
+          <div class="segmented" role="radiogroup" aria-labelledby="researchSideLabel" id="researchSide"><button type="button" role="radio" data-side="" aria-checked="true">Both sides</button><button type="button" role="radio" data-side="for" aria-checked="false">For</button><button type="button" role="radio" data-side="against" aria-checked="false">Against</button></div>
+        </div>
+        <div class="setup-grid" data-only="mun">
+          <div><label class="field-label" for="researchCommittee">Committee</label><input id="researchCommittee" class="text-input" list="committeeList" maxlength="120" placeholder="e.g. UN General Assembly"></div>
+          <div><label class="field-label" for="researchCountry">Your country</label><input id="researchCountry" class="text-input" list="countryList" maxlength="80" placeholder="Start typing a country"></div>
+        </div>
+        <label class="check"><input type="checkbox" id="researchWeb" checked> Live web research with cited sources (needs the AI engine and internet)</label>
+        <div class="form-actions"><button type="submit" id="buildResearch">Build research workspace</button><button type="button" id="offlineResearch">Offline template</button></div>
+        <p class="field-note" id="researchNote">Facts are labelled as Verified, Sourced, Analysis or Background so you can see what was checked.</p>
+      </form>
+      <div class="research-output" id="researchOutput" aria-live="polite"></div>
+    </section>
+
+    <!-- PRACTICE -->
+    <section class="panel chat-panel practice-panel" id="practicePanel" aria-labelledby="practiceTitle" hidden>
+      <div class="panel-head">
+        <h2 id="practiceTitle" class="chat-title">Practice</h2>
+        <div class="session-controls" id="sessionControls" hidden>
+          <button type="button" class="ghost" id="pauseSession" aria-pressed="false">Pause</button>
+          <button type="button" class="ghost" id="endSession">End &amp; review</button>
+        </div>
+        <button type="button" class="ghost" id="newSession" hidden>New session</button>
+      </div>
+
+      <div class="practice-setup" id="practiceSetup">
+        <form class="setup-card" id="setupForm">
+          <p class="setup-summary" id="setupSummary"></p>
+          <label class="field-label" for="setupTopic">Topic</label>
+          <input id="setupTopic" class="text-input" maxlength="300" required autocomplete="off">
+          <span class="field-label" id="setupFormatLabel">Format</span>
+          <div class="segmented" role="radiogroup" aria-labelledby="setupFormatLabel" id="setupFormat">
+            <button type="button" role="radio" data-format="for-against" aria-checked="true">For / Against</button><button type="button" role="radio" data-format="group" aria-checked="false">Group Discussion</button><button type="button" role="radio" data-format="mun" aria-checked="false">MUN</button>
+          </div>
+
+          <div data-only="for-against">
+            <span class="field-label" id="sideLabel">Your side</span>
+            <div class="side-picker" role="radiogroup" aria-labelledby="sideLabel" aria-describedby="sideNote" id="sidePicker">
+              <button type="button" role="radio" data-side="for" aria-checked="false"><b>For</b><span>Support the motion</span></button>
+              <button type="button" role="radio" data-side="against" aria-checked="false"><b>Against</b><span>Oppose the motion</span></button>
+            </div>
+            <p class="field-note" id="sideNote">Debate Buddy takes the opposite side.</p>
+            <div class="setup-grid">
+              <div><label class="field-label" for="rounds">Rounds</label><select id="rounds" class="text-input"><option value="3">3 (opening, rebuttal, closing)</option><option value="4">4</option><option value="5">5</option><option value="6">6</option></select></div>
+              <div><label class="field-label" for="opener">Who opens</label><select id="opener" class="text-input"><option value="user">I open</option><option value="ai">Debate Buddy opens</option></select></div>
+            </div>
+          </div>
+          <div data-only="group" class="setup-grid">
+            <div><label class="field-label" for="participants">Other participants</label><select id="participants" class="text-input"><option>2</option><option selected>3</option><option>4</option><option>5</option></select></div>
+            <div><label class="field-label" for="groupRounds">Discussion length</label><select id="groupRounds" class="text-input"><option value="3">Short (3 rounds)</option><option value="5" selected>Standard (5 rounds)</option><option value="7">Long (7 rounds)</option></select></div>
+          </div>
+          <div data-only="mun">
+            <div class="setup-grid">
+              <div><label class="field-label" for="committee">Committee</label><input id="committee" class="text-input" list="committeeList" maxlength="120" placeholder="e.g. DISEC (First Committee)"></div>
+              <div><label class="field-label" for="country">Your country</label><input id="country" class="text-input" list="countryList" maxlength="80" placeholder="Start typing a country" aria-describedby="countryNote"></div>
+            </div>
+            <p class="field-note" id="countryNote"><button type="button" class="link-btn" id="countryHelp">Help me choose a country</button></p>
+            <div id="countryAdvice" class="country-advice" aria-live="polite" hidden></div>
+            <label class="field-label" for="delegates">Other delegations to include (optional)</label>
+            <input id="delegates" class="text-input" maxlength="300" placeholder="e.g. Brazil, Japan, South Africa">
+            <div class="setup-grid">
+              <div><label class="field-label" for="munOpener">Who speaks first</label><select id="munOpener" class="text-input"><option value="user">My delegation</option><option value="delegate">Another delegate</option></select></div>
+              <div><label class="field-label" for="activity">Starting activity</label><select id="activity" class="text-input activity-select"></select></div>
+            </div>
+          </div>
+
+          <div class="setup-grid">
+            <div><label class="field-label" for="speakingTime">Your speaking time</label><select id="speakingTime" class="text-input"><option value="0">No timer</option><option value="60">1 minute</option><option value="90" selected>1 minute 30</option><option value="120">2 minutes</option><option value="180">3 minutes</option><option value="300">5 minutes</option></select></div>
+            <div><label class="field-label" for="responseLength">AI turn length</label><select id="responseLength" class="text-input"><option value="short">Short</option><option value="standard" selected>Standard</option><option value="long">Long</option></select></div>
+          </div>
+
+          <fieldset class="difficulty" aria-describedby="difficultyExplain">
+            <legend class="field-label">Difficulty</legend>
+            <div class="difficulty-options" id="difficultyOptions">
+              <label><input type="radio" name="difficulty" value="beginner"><span>Beginner</span></label>
+              <label><input type="radio" name="difficulty" value="intermediate" checked><span>Intermediate</span></label>
+              <label><input type="radio" name="difficulty" value="advanced"><span>Advanced</span></label>
+            </div>
+            <ul class="difficulty-explain" id="difficultyExplain"></ul>
+          </fieldset>
+
+          <div class="form-actions"><button type="submit" id="startSession">Start session</button><button type="button" id="soloDrill">Solo drill (offline)</button></div>
+          <p class="field-note" id="setupNote" role="status"></p>
+        </form>
+      </div>
+
+      <div class="practice-session" id="practiceSession" hidden>
+        <div class="session-strip" id="sessionStrip">
+          <div class="roster" id="roster" aria-label="Participants"></div>
+          <div class="mun-controls" id="munControls" hidden>
+            <label class="sr-only" for="sessionActivity">Committee activity</label>
+            <select id="sessionActivity" class="chip-select activity-select"></select>
+            <button type="button" class="ghost" id="moveActivity">Move committee</button>
+          </div>
+        </div>
+        <div class="thread" id="thread" tabindex="-1">
+          <ol class="messages" id="messages" aria-live="polite" aria-relevant="additions"></ol>
+        </div>
+        <div class="paused-banner" id="pausedBanner" role="status" hidden>Session paused. Your progress is saved. <button type="button" id="resumeSession">Continue</button></div>
+      </div>
+    </section>
+
+    <!-- ASK AI: one question, one answer -->
+    <section class="panel ask-panel" id="askPanel" aria-labelledby="askTitle" hidden>
+      <div class="panel-head"><h2 id="askTitle">Ask AI</h2></div>
+      <p class="panel-note">Ask a quick question about debating: a motion, an argument, a rebuttal, MUN procedure or how to research a topic. The AI cannot look things up here, so check any fact it mentions before you use it.</p>
+      <form class="ask-form" id="askForm">
+        <label class="field-label" for="askQuestion">Your question</label>
+        <textarea id="askQuestion" class="text-input" rows="3" maxlength="2000" required placeholder="e.g. What are two strong arguments against banning homework?"></textarea>
+        <div class="form-actions"><button type="submit" id="askSend">Ask</button><span class="field-note" id="askCount" aria-hidden="true">0 / 2,000</span></div>
+      </form>
+      <p class="field-note" id="askStatus" role="status"></p>
+      <article class="ask-answer" id="askAnswer" aria-live="polite" hidden>
+        <h3>Answer</h3>
+        <div class="bubble" id="askAnswerText"></div>
+        <p class="field-note" id="askAnswerNote"></p>
+      </article>
+    </section>
+
+    <!-- PROGRESS -->
+    <section class="panel" id="progressPanel" aria-labelledby="progressTitle" hidden>
+      <div class="panel-head"><h2 id="progressTitle">Progress</h2></div>
+      <div id="progressBody"></div>
+    </section>
+
+    <!-- HISTORY -->
+    <section class="panel" id="historyPanel" aria-labelledby="historyTitle" hidden>
+      <div class="panel-head"><h2 id="historyTitle">History</h2><button class="ghost" type="button" id="openProgress">Your progress</button></div>
+      <div class="segmented" role="radiogroup" aria-label="Show" id="historyFilter"><button type="button" role="radio" data-filter="all" aria-checked="true">All</button><button type="button" role="radio" data-filter="practice" aria-checked="false">Practice</button><button type="button" role="radio" data-filter="research" aria-checked="false">Research</button></div>
+      <label class="sr-only" for="historySearch">Search your history</label>
+      <input id="historySearch" class="search-input history-search" type="search" placeholder="Search by topic, country or format" autocomplete="off">
+      <p class="panel-note" id="historySummary">Saved in this browser only.</p>
+      <div id="sessionHistory" class="session-list"></div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section class="panel" id="settingsPanel" aria-labelledby="settingsTitle" hidden>
+      <div class="panel-head"><h2 id="settingsTitle">Settings</h2></div>
+      <div class="setting"><div><h3>AI engine</h3><p id="settingsStatus">Checking…</p><p class="field-note">Debate Buddy uses the Codex app on this computer, signed in with your own account. Practice and live research need it. Topics, setup, history, progress, the offline research template and the solo drill work without it.</p></div><button id="reconnectEngine" type="button">Reconnect</button></div>
+      <div class="setting">
+        <div><h3>Appearance</h3><p>Three interfaces: Core, the original black and red; Glass, translucent and calm; and Marigold, warm and bold. Light works better on bright projectors.</p></div>
+        <div class="setting-actions">
+          <label class="field-label" for="uiChoice">Interface</label>
+          <select id="uiChoice"><option value="core">Core</option><option value="glass">Glass</option><option value="marigold">Marigold</option></select>
+          <label class="field-label" for="themePreference">Theme</label>
+          <select id="themePreference"><option value="dark">Dark</option><option value="light">Light</option></select>
+          <label class="check"><input id="cursorPreference" type="checkbox" checked> Animated cursor &amp; click effects</label>
+          <label class="check"><input id="motionPreference" type="checkbox"> Reduce motion</label>
+        </div>
+      </div>
+      <div class="setting personalise">
+        <div class="personalise-body"><h3>Personalise</h3><p>Colours and background for the <b id="lookUiName">Core</b> interface. Each interface remembers its own look.</p>
+          <label class="field-label" for="cursorStyle">Cursor (all interfaces)</label>
+          <select id="cursorStyle"></select>
+          <span class="field-label">Accent colour</span><div class="swatches" data-look="accent" role="group" aria-label="Accent colour"></div>
+          <span class="field-label">Text colour</span><div class="swatches" data-look="ink" role="group" aria-label="Text colour"></div>
+          <span class="field-label">Your speech bubbles</span><div class="swatches" data-look="bubble" role="group" aria-label="Speech bubble colour"></div>
+          <span class="field-label">Background</span><div class="bg-tiles" id="bgTiles" role="group" aria-label="Background"></div>
+          <input id="bgFile" type="file" accept="image/*" hidden>
+          <label class="range-row" id="bgDimRow" hidden>Dim the photo <input id="bgDim" type="range" min="0" max="80" step="5"></label>
+          <div class="form-actions"><button id="resetLook" type="button">Reset this interface</button></div>
+        </div>
+      </div>
+      <div class="setting phone-setting" id="phoneSetting">
+        <div class="phone-body">
+          <h3>Use on your phone</h3>
+          <p id="phoneIntro">Open Debate Buddy on your phone or tablet. Your phone does not need Codex: this computer does the AI work, so keep it on, awake and on the same Wi-Fi as your phone.</p>
+          <div class="phone-panel" id="phonePanel" hidden>
+            <div class="phone-qr" id="phoneQr" role="img" aria-label="QR code that opens Debate Buddy on your phone"></div>
+            <div class="phone-steps">
+              <ol>
+                <li>Connect your phone to the same Wi-Fi as this computer.</li>
+                <li>Point your phone's camera at the code and tap the link.</li>
+                <li>Optional: use "Add to Home Screen" in your phone's browser so it opens like an app.</li>
+              </ol>
+              <p class="field-note">Or type this address on your phone:</p>
+              <p class="phone-url" id="phoneUrl"></p>
+              <label class="field-label" for="phoneAddress" id="phoneAddressLabel" hidden>Network</label>
+              <select id="phoneAddress" class="text-input" hidden></select>
+              <p class="field-note">The link contains a private key. Anyone on your Wi-Fi with this link can use Debate Buddy, so only share it with yourself. If it leaks, press New link.</p>
+            </div>
+          </div>
+          <p class="field-note" id="phoneNote" role="status"></p>
+        </div>
+        <div class="setting-actions"><button id="phoneToggle" type="button" aria-pressed="false">Turn on phone access</button><button id="phoneReset" type="button" hidden>New link</button></div>
+      </div>
+      <div class="setting">
+        <div>
+          <h3>Voice</h3>
+          <p>Read the other side's turns aloud while you practise. Dictation turns your speech into text you can edit before sending; audio is not recorded or scored.</p>
+          <label class="field-label" for="readAloud">Read AI turns aloud</label>
+          <select id="readAloud"><option value="off">Off</option><option value="browser">Browser voice (works offline)</option><option value="elevenlabs">ElevenLabs (needs your key)</option></select>
+          <label class="field-label" for="elevenLabsApiKey">ElevenLabs API key (optional)</label>
+          <div class="inline-field"><input id="elevenLabsApiKey" type="password" autocomplete="new-password" placeholder="Paste your API key" maxlength="256" aria-describedby="keyNote"><button id="saveElevenLabsKey" type="button">Save key</button></div>
+          <p class="field-note" id="keyNote">Saved only on this computer in the app folder's .env file. It is never sent back to this page.</p>
+          <p class="field-note" id="voiceCheck" role="status"></p>
+        </div>
+        <div class="setting-actions"><button id="testVoice" type="button">Test voice</button></div>
+      </div>
+      <div class="setting account-setting">
+        <div class="account-body">
+          <h3>Account and cloud sync</h3>
+          <p id="accountStatus" role="status">Checking…</p>
+          <p class="field-note" id="accountNote" role="status"></p>
+          <p class="field-note">Your sessions, research, progress and settings (colours, background, theme, difficulty) are saved to your account, so they follow you to other devices.</p>
+          <p class="field-note" id="supabaseStatus" role="status"></p>
+        </div>
+        <div class="setting-actions"><button id="syncNow" type="button" hidden>Sync now</button><button id="signOut" type="button" hidden>Sign out</button><button id="checkSupabase" type="button">Check connection</button></div>
+      </div>
+      <div class="setting"><div><h3>Your data</h3><p id="dataSummary">Sessions, research and settings are saved in this browser on this computer. Nothing is uploaded except the turns sent to the AI engine.</p></div><div class="setting-actions"><button id="exportData" type="button">Export as JSON</button><button id="clearData" type="button">Delete all history</button></div></div>
+    </section>
+  </main>
+
+  <!-- The composer is docked under the work area and only shows during a live session. -->
+  <div class="dock" id="dock" hidden>
+    <form class="composer" id="chatForm">
+      <label class="sr-only" for="prompt" id="promptLabel">Your contribution</label>
+      <textarea id="prompt" rows="1" maxlength="10000" placeholder="Make your argument…"></textarea>
+      <div class="composer-row">
+        <div class="composer-tools">
+          <div class="hint-menu">
+            <label class="sr-only" for="hintType">Kind of hint</label>
+            <select id="hintType" class="chip-select" title="Kind of hint"></select>
+            <button type="button" class="chip" id="hintBtn">Get a hint</button>
+          </div>
+          <button type="button" class="chip" id="listenBtn" hidden>Let others speak</button>
+        </div>
+        <div class="composer-actions">
+          <span class="composer-status" id="composerStatus" role="status"></span>
+          <button type="button" class="icon-btn" id="micInline" aria-label="Dictate" aria-pressed="false" title="Dictate">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3" fill="none" stroke-width="2" stroke-linecap="round"/></svg>
+          </button>
+          <button type="button" class="stop-btn" id="stopResponse" hidden>Stop</button>
+          <button type="submit" class="send-btn" id="send" aria-label="Send contribution">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M5.5 11.5L12 5l6.5 6.5" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+      </div>
+    </form>
+    <p class="composer-hint">Enter to send · Shift + Enter for a new line</p>
+  </div>
+</div>
+
+<datalist id="committeeList"></datalist>
+<datalist id="countryList"></datalist>
+
+<dialog class="confirm-dialog" id="confirmDialog" aria-labelledby="confirmTitle">
+  <form method="dialog"><h2 id="confirmTitle">Are you sure?</h2><p id="confirmText"></p><div class="form-actions"><button value="ok" id="confirmOk">Confirm</button><button value="cancel" autofocus>Cancel</button></div></form>
+</dialog>
+
+<dialog class="confirm-dialog self-review" id="selfReview" aria-labelledby="selfReviewTitle">
+  <form method="dialog" id="selfReviewForm"><h2 id="selfReviewTitle">Rate your drill</h2><p class="field-note">This is your own assessment. The solo drill has no AI judge.</p><div id="selfReviewFields"></div><label class="field-label" for="selfNext">One thing to work on next time</label><input id="selfNext" class="text-input" maxlength="200"><div class="form-actions"><button value="ok">Save review</button><button value="cancel">Cancel</button></div></form>
+</dialog>
+
+<div id="toast" class="toast" role="status" hidden></div>
+<script src="/vendor/gsap.min.js"></script>
+<script src="/vendor/qrcode.js"></script>
+<script type="module" src="/app.js"></script>
+</body>
+</html>

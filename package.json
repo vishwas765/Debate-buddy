@@ -1,0 +1,20 @@
+{
+  "name": "debate-buddy",
+  "private": true,
+  "type": "module",
+  "description": "Debate Buddy: a local debate research and practice app (For / Against, Group Discussion, Model United Nations).",
+  "scripts": {
+    "start": "node launcher.mjs",
+    "diagnose": "node launcher.mjs --diagnose",
+    "build": "npx --yes esbuild@0.28.2 server.mjs --bundle --platform=node --target=node22 --format=esm \"--banner:js=import{createRequire as __cr}from'node:module';const require=__cr(import.meta.url);\" --outfile=server.bundle.mjs",
+    "check": "node --check launcher.mjs && node --check server.mjs && node --check server.bundle.mjs && node --check codex-bridge.mjs && node --check debate-coach.mjs && node --check request-validation.mjs && node --check runtime-locator.mjs && node --check env-file.mjs && node --check tts.mjs && node --check identity.mjs && node --check supabase.mjs && node --check supabase-client.mjs && node --check cloud.mjs && node --check ai.mjs && node --check public/cloud.js && node --check public/app.js && node --check public/topics.js && node --check public/voice.js && node --check public/research-offline.js && node --check public/results.js && node --check public/motion.js && node --check public/looks.js && node --check public/cursor.js && node --check public/storage.js"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@supabase/ssr": "^0.12.7",
+    "@supabase/supabase-js": "^2.119.0",
+    "ai": "^7.0.173"
+  }
+}

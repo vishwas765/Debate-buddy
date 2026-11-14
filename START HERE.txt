@@ -1,0 +1,202 @@
+DEBATE BUDDY
+Research, practise and review debates on your own computer.
+Interface by Vivaan Kheria.
+=================================================================
+
+WHAT IT DOES
+- Debate: pick a suggested topic (or type your own), choose a format, and go.
+- Research: a plain-language brief in tabs (Overview, Arguments, Plan &
+  sources, Cheat sheet) for For / Against, Group Discussion or Model United
+  Nations. Small labels show what was checked ("Checked", "Source"), what is
+  Debate Buddy's own reasoning ("Our take") and what to verify ("Verify").
+  Stuck? Type a question in the "Ask" box and get an answer about your topic.
+- Practice: argue against an AI opponent (For / Against), join a moderated
+  group discussion, or represent a country in an MUN committee. Choose
+  Beginner, Intermediate or Advanced. Pause, continue, ask for a hint, and
+  end with a written review. Every speaker gets their own bubble colour.
+- The face is back. It speaks each turn aloud; when an MUN delegate speaks,
+  the face becomes that country's flag. Your speaking clock waits until the
+  other side has finished talking (or until you start typing). Turn the
+  voice on or off with the button under the face.
+- Accounts: everyone signs in first. Your history and settings follow you to
+  every device, and teachers can share topics (see ACCOUNTS AND CLOUD SYNC).
+- Topics, Progress, History and Settings (Core, Glass and Marigold looks,
+  light and dark themes, reduced motion, optional read-aloud).
+
+START IT
+1. Extract the whole ZIP to a folder you can write to. Do not run it from
+   inside the ZIP.
+2. Windows: double-click "START Debate Buddy.cmd".
+   macOS:   double-click "Start Debate Buddy.command".
+   Linux:   run "Start Debate Buddy.sh".
+3. The launcher starts a small local server and opens your browser at
+   http://localhost:8350 (or the next free port). Clicking the launcher
+   again reuses the running copy.
+
+macOS: files from the internet may be blocked the first time. If macOS says
+the file cannot be opened, Control-click it and choose Open, or allow it in
+System Settings > Privacy & Security. You can also run it from Terminal:
+  sh "Start Debate Buddy.command"
+Linux: the file may need Execute permission, or run: sh "Start Debate Buddy.sh"
+
+NODE.JS
+An installed Node.js 22 or newer is used when found (including Homebrew, the
+nodejs.org installer, nvm and Volta locations on macOS). Otherwise the
+launcher downloads a portable Node 24 LTS runtime from https://nodejs.org into
+the .runtime folder and checks its SHA-256 against the official list before
+using it. That first download needs internet access. No administrator rights
+are needed. Supported: Windows x64/ARM64, macOS (Intel and Apple silicon),
+Linux x64/ARM64.
+
+THE AI ENGINE (CODEX)
+AI practice, hints, reviews and live web research use Codex, the OpenAI
+coding agent, running on your computer and signed in with your own account.
+Install the Codex app or CLI: https://developers.openai.com/codex/cli/
+The launcher finds Codex on PATH and in the usual app locations. If yours is
+elsewhere, set DEBATE_BUDDY_CODEX_PATH to the Codex executable (or the npm
+package's bin/codex.js) before starting.
+If Codex is missing or not signed in, Debate Buddy still works after you
+sign in to your account, in offline mode: topics, setup, history, progress, the offline research template and the
+solo drill all work, and the app says clearly that AI features are
+unavailable. After signing in, press Settings > AI engine > Reconnect.
+
+RESEARCH HONESTY
+- Live research only cites pages the engine actually found with web search in
+  that session, and the page shows how many searches ran. If none ran, or web
+  research was off, the workspace says so and facts are marked Background.
+- The offline template contains no facts and no sources: only a plan, search
+  queries and links that open live searches.
+- Country positions and voting predictions are reasoned possibilities unless
+  a cited source supports them. Always open sources before relying on them.
+
+BROWSER
+Chrome is preferred, then Microsoft Edge; otherwise the default browser
+opens. Any current browser runs the app. Dictation (speech to text) needs a
+browser with speech recognition, such as Chrome or Edge. Dictation only types
+text for you to edit; audio is never recorded or scored. Set
+DEBATE_BUDDY_BROWSER_PATH to use a specific browser.
+
+USE IT ON YOUR PHONE OR TABLET
+Your phone does not need Codex or anything installed. Debate Buddy keeps
+running on your computer, and the phone opens it in its browser over Wi-Fi.
+1. Start Debate Buddy on your computer as usual.
+2. On the computer, open Settings > Use on your phone > Turn on phone access.
+3. Connect the phone to the same Wi-Fi, scan the QR code with its camera and
+   tap the link. Optional: "Add to Home Screen" so it opens like an app.
+Good to know:
+- The computer must stay on, awake and running Debate Buddy. If it sleeps,
+  the phone stops working until it wakes up.
+- The first time, Windows or macOS may ask whether Node.js may accept
+  incoming connections. Allow it on private/home networks, or the phone
+  cannot connect. Guest or school Wi-Fi often blocks devices from seeing
+  each other; a phone hotspot or home Wi-Fi works better.
+- The link contains a private key, so only open it on your own devices.
+  "New link" in Settings makes the old one stop working.
+- Practice, research and the Ask box work on the phone. Voice dictation does
+  not (browsers only allow the microphone on secure https pages), but
+  read-aloud and the talking face do.
+- Voice on the phone: tap anywhere once after opening the page (phones only
+  allow sound after a tap). On iPhone, also turn the side Silent switch off
+  and raise the volume; browser speech is muted in silent mode.
+- Sessions you start on the phone are saved in the phone's browser and do
+  not appear in the computer's History, and the other way round.
+- It only works on the same network. Using it away from home would need a
+  private network tool such as Tailscale on both devices.
+
+OPTIONAL VOICE
+Settings > Voice can read the other side's turns aloud with the browser's
+built-in voice, or with ElevenLabs if you save your own API key there (stored
+only in this folder's .env file). You can also copy .env.example to .env.
+
+ACCOUNTS AND CLOUD SYNC (SUPABASE)
+Debate Buddy opens on a sign-in screen and cannot be used until someone
+signs in, so the Supabase setup below is required. Once signed in, sessions,
+research, progress and settings (interface, theme, colours, background,
+difficulty) follow the account to other devices. Teachers can share topics
+with everyone.
+One-time setup by whoever owns the Supabase project:
+1. Open the file .env.local in this folder with a text editor (if it is not
+   there, copy .env.example and name the copy .env.local) and paste the
+   Project URL and the publishable (anon) key after the = signs. Both are in
+   the Supabase dashboard under Project Settings > API. Never use the secret
+   (service_role) key; the app refuses it. Git ignores .env.local.
+2. In the Supabase dashboard open SQL Editor, paste the whole of
+   supabase/schema.sql and press Run (run it again after every update; it is
+   safe to repeat). It creates four tables, all with Row
+   Level Security on: each person sees only their own sessions, settings and
+   profile,
+   signed-in people can read shared topics, and only teachers can change them.
+3. Start Debate Buddy and create an account on the sign-in screen. If Supabase asks you to confirm your email, open the link it
+   sends, then sign in. (The link may land on a page that does not load; the
+   confirmation still counts. For a classroom you can turn "Confirm email"
+   off in the dashboard under Authentication > Sign In / Providers > Email.)
+4. To make someone a teacher, run the short "update" statement at the end of
+   supabase/schema.sql in the SQL Editor with their email address.
+Good to know:
+- The key and the sign-in tokens stay on the computer running Debate Buddy.
+  The page never receives them.
+- If two devices change the same session before syncing, the device that
+  syncs last keeps its version.
+- Settings sync a few seconds after you change them. When you sign in on
+  another device the page reloads once to show your look. A very large
+  background photo stays on the device it was added on.
+- The sign-in screen needs the internet the first time and whenever the
+  sign-in has expired.
+- The lock stops people using the app and the AI without an account. It is
+  not encryption: history already saved in a browser stays in that browser.
+- On a shared computer, sign out when you finish. When a different person
+  signs in, the previous person's history is removed from that browser (it
+  stays in their account).
+
+ASK AI (VERCEL AI GATEWAY)
+The "Ask AI" tab has a box for a question and a button that shows the AI's
+answer. It answers debate questions only.
+Setup: open .env.local in this folder (if it is not there, copy .env.example
+and name the copy .env.local) and paste your Vercel AI Gateway key after
+AI_GATEWAY_API_KEY= . Create the key in the Vercel dashboard under
+AI Gateway > API Keys. Then start Debate Buddy again.
+- The key stays on this computer. The page never receives it; the server
+  makes the AI call.
+- Only signed-in people can ask, and each person is limited to 20 questions
+  every 10 minutes.
+- To use a different model, set AI_GATEWAY_MODEL in .env.local to a name from
+  the AI Gateway model list.
+- The AI cannot browse the web here. Check any fact it gives.
+- AI practice, hints, reviews and live research still use Codex (above).
+
+YOUR DATA
+Sessions, reviews, research workspaces and settings are stored in this
+browser on this computer (IndexedDB and local storage). Only the turns you
+send to the AI engine leave the computer, through your own Codex account.
+Settings > Your data can export everything as JSON or delete all history.
+The server listens only on 127.0.0.1 unless you turn on phone access, which
+opens a second, key-protected port on your local network until you turn it off.
+
+UPDATING
+Extract the new version over the old folder and start the launcher again. If
+an older Debate Buddy server is still running from that folder, the launcher
+stops it and starts the new one automatically.
+
+TROUBLESHOOTING
+- Keep all extracted files together.
+- Logs: work/server.log and work/server-error.log. Current address:
+  work/launcher.json.
+- Diagnostic report: "START Debate Buddy.cmd" --diagnose (Windows, from a
+  Command Prompt), or sh "Start Debate Buddy.command" --diagnose (macOS),
+  or sh "Start Debate Buddy.sh" --diagnose (Linux).
+- A firewall or proxy can block the first Node download or the AI engine.
+- The server keeps running after the launcher window closes; restarting the
+  computer stops it. The Stop button stops a reply in progress.
+
+SOURCE AND REBUILD
+The launcher runs server.bundle.mjs. After editing the server source, run
+"npm run build" (uses esbuild) or delete server.bundle.mjs so server.mjs runs
+directly. "npm run check" syntax-checks every module. No npm packages are
+needed to run the app: the Supabase packages are built into server.bundle.mjs.
+To change the server code, run "npm install" first.
+
+TESTED SO FAR
+The app was exercised on Linux (headless Chromium) with a stand-in AI engine
+and in offline mode. The Windows and macOS launchers were reviewed and
+updated but have not yet been run on those systems. Real Codex responses were
+not tested.

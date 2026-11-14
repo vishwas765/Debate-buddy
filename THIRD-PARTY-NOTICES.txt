@@ -1,0 +1,22 @@
+THIRD-PARTY NOTICES
+
+The local server (server.bundle.mjs) is built only from Debate Buddy's own source
+files and Node.js built-in modules. No npm packages are bundled.
+
+The browser interface includes:
+
+GSAP 3 (public/vendor/gsap.min.js)
+Copyright GreenSock / Webflow. Used under the GSAP Standard License,
+https://gsap.com/standard-license. GSAP is free to use, including commercially.
+
+Doto (public/fonts/doto-*.woff2), Copyright The Doto Project Authors.
+Space Grotesk (public/fonts/grotesk-*.woff2), Copyright The Space Grotesk Project Authors.
+Space Mono (public/fonts/mono-400.woff2), Copyright Google LLC / Colophon Foundry.
+All three are licensed under the SIL Open Font License 1.1; the licence text is in
+public/fonts/OFL.txt.
+
+Country flags (public/flags/*.svg) come from flag-icons 7.2.3 by Panayiotis Lipiridis,
+MIT License. The full licence text is in public/flags/LICENSE-flag-icons.txt.
+
+QR Code Generator for JavaScript 1.4.4 (public/vendor/qrcode.js), Copyright (c) 2009
+Kazuhiko Arase, MIT License (licence notice inside the file).
